@@ -5,6 +5,15 @@ const mongoDBConfig = require('./config/db').mongoDBConfig;
 const passport = require('passport');
 const morgan = require('morgan');
 const http = require('http');
+const fs = require('fs');
+
+// Creates the public directories if needed
+const publicDirectories = ['/picture/avatar', '/picture/subject'];
+publicDirectories.forEach((dir) => {
+    if (!fs.existsSync('./public' + dir)){
+        fs.mkdirSync('./public' + dir, {recursive: true});
+    }
+});
 
 // Bootstrap models
 require('./app/Assignment/model');
@@ -39,7 +48,7 @@ server.use(passport.initialize({}));
 
 server.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
     res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH");
     next();
 });

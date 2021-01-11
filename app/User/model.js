@@ -8,8 +8,6 @@ const userSchema = new mongoose.Schema({
     email: {type: String, required: true},
     avatarUrl: {type: String},
     subjects: [{type: mongoose.Schema.Types.ObjectId, ref: 'Subject'}],
-    pendingAssignments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Assignment'}],
-    submittedAssignments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Assignment'}],
     userLevel: {type: String, enum: ['teacher', 'student'], default: 'student'}
 });
 

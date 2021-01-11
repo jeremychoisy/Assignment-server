@@ -68,17 +68,7 @@ exports.logIn = (req, res) => {
                 }
                 const token = jwt.sign({email: user.email, admin: user.userLevel === 'teacher'}, key.secretKey);
                 const foundUser = await User.findOne({email: req.body.email})
-                    .select('name lastName email avatarUrl creationDate pendingAssignments submittedAssignments userLevel')
-                    .populate({
-                        path: 'pendingAssignments',
-                        options: {sort: {creationDate: -1}},
-                        populate: {path: 'subject'}
-                    })
-                    .populate({
-                        path: 'submittedAssignments',
-                        options: {sort: {creationDate: -1}},
-                        populate: {path: 'subject'}
-                    })
+                    .select('name lastName email avatarUrl creationDate userLevel')
                     .populate('subjects');
                 res.status(200).json({
                     user: foundUser,
@@ -119,16 +109,6 @@ exports.update = async (req, res) => {
                     new: true
                 }
             )
-                .populate({
-                    path: 'pendingAssignments',
-                    options: {sort: {creationDate: -1}},
-                    populate: {path: 'subject'}
-                })
-                .populate({
-                    path: 'submittedAssignments',
-                    options: {sort: {creationDate: -1}},
-                    populate: {path: 'subject'}
-                })
                 .populate('subjects')
                 .exec(async (err, user) => {
                     if (err) {
@@ -157,8 +137,6 @@ exports.get = async (req, res) => {
     try {
         const user = await User.findOne({_id: req.params.id})
             .select('-password')
-            .populate({path: 'pendingAssignments', options: {sort: {creationDate: -1}}, populate: {path: 'subject'}})
-            .populate({path: 'submittedAssignments', options: {sort: {creationDate: -1}}, populate: {path: 'subject'}})
             .populate('subjects');
 
         if (user) {
@@ -185,8 +163,6 @@ exports.getForSubject = async (req, res) => {
         const users = await User.find({subjects: req.params.id})
             .select('-password')
             .sort({lastName: 1})
-            .populate({path: 'pendingAssignments', options: {sort: {creationDate: -1}}, populate: {path: 'subject'}})
-            .populate({path: 'submittedAssignments', options: {sort: {creationDate: -1}}, populate: {path: 'subject'}})
             .populate('subjects');
 
         res.status(200).json({

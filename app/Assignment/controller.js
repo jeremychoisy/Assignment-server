@@ -103,11 +103,9 @@ exports.create = async (req, res) => {
             let nbOfAssignmentsCreated = 0;
             // Creates a root assignment, authored by the teacher, that'll allow to update/delete all the related assignments if needed.
             const rootAssignment = await Assignment.create({...data, author: req.user._id});
-            await User.updateOne({_id: req.user._id}, {$push: {pendingAssignments: rootAssignment._id}});
             // Creates one assignment per student
             for (const member of subjectMembers) {
                 const assignment = await Assignment.create({...data, author: member._id, rootAssignment: rootAssignment._id});
-                await User.updateOne({_id: member.id}, {$push: {pendingAssignments: assignment._id}});
                 nbOfAssignmentsCreated++;
             }
             res.status(200).json({
@@ -178,15 +176,8 @@ exports.delete = async (req, res) => {
         // Checks password
         const result = await bcrypt.compare(req.body.password, user.password);
         if (result) {
-            // Removes the children from the students' assignments array
-            const assignments = await Assignment.find({'rootAssignment': req.params.id});
-            for (const assignment of assignments) {
-                await updateAssignments(assignment._id);
-            }
             // Deletes all assignments related to the root assignment
             await Assignment.deleteMany({'rootAssignment': req.params.id});
-            // Removes sthe root assignment from the teacher's assignments array
-            await updateAssignments(req.params.id);
             // Deletes root assignment
             await Assignment.findByIdAndDelete(req.params.id);
             res.status(200).json({
@@ -203,8 +194,3 @@ exports.delete = async (req, res) => {
         });
     }
 };
-
-const updateAssignments = async (id) => {
-    await User.updateMany({pendingAssignments: id}, {$pull: {pendingAssignments: id}});
-    await User.updateMany({submittedAssignments: id}, {$pull: {submittedAssignments: id}});
-}

@@ -17,7 +17,6 @@ passport.use('login', new LocalStrategy({
     async (email, password, done) => {
         try {
             await User.findOne({email: email})
-            .populate('orders')
             .exec(async (err, user) => {
                 if (user) {
                     const result = await bcrypt.compare(password, user.password);
