@@ -6,6 +6,14 @@ const passport = require('passport');
 const morgan = require('morgan');
 const http = require('http');
 const fs = require('fs');
+const AWS = require('aws-sdk');
+
+AWS.config.update({region: process.env.AWS_REGION});
+global.S3 = new AWS.S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    apiVersion: '2006-03-01'
+})
 
 // Creates the public directories if needed
 const publicDirectories = ['/picture/avatar', '/picture/subject'];
