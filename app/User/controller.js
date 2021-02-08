@@ -4,9 +4,7 @@ const jwt = require('jsonwebtoken');
 const key = require('../../config/jwtKeys');
 const formidable = require('formidable');
 const formHelper = require('../helpers/formSetup');
-const fileHelper = require('../helpers/deleteFile');
 const passport = require('passport');
-
 
 const User = mongoose.model('User');
 const Assignment = mongoose.model('Assignment')
@@ -100,7 +98,7 @@ exports.update = async (req, res) => {
         form.on('end', async () => {
             const user = await User.findById(req.user._id);
             if (data.avatarUrl) {
-                fileHelper.deleteFile(user.avatarUrl, 'avatar');
+                //TODO: Remove AWS S3
             }
             for (let prop in data) if (data.hasOwnProperty(prop) && !allowedUpdates.includes(prop)) delete data[prop];
             await User.findOneAndUpdate({_id: req.user._id}, {$set: data},
