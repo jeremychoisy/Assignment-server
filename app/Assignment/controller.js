@@ -49,7 +49,7 @@ exports.get = async (req, res) => {
 
         res.status(200).json({
             assignments,
-            totalCount: totalCount[0].value
+            totalCount: (totalCount[0] && totalCount[0].value) || 0
         });
     } catch (err) {
         res.status(500).json({
