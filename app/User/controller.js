@@ -17,7 +17,7 @@ const BCRYPT_SALT_ROUNDS = 10;
 exports.create = async (req, res) => {
     try {
         const form = new formidable.IncomingForm(), data = {};
-        formHelper.formSetup(form, data, 'avatar');
+        formHelper.formSetup(form, data);
         form.on('error', function (err) {
             res.status(400).json({
                 message: err.toString()
@@ -88,7 +88,7 @@ exports.logIn = (req, res) => {
 exports.update = async (req, res) => {
     try {
         const form = new formidable.IncomingForm(), data = {};
-        formHelper.formSetup(form, data, 'avatar');
+        formHelper.formSetup(form, data);
         const allowedUpdates = ['name', 'lastName', 'avatarUrl'];
         form.on('error', function (err) {
             res.status(400).json({

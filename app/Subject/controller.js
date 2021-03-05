@@ -14,7 +14,7 @@ const Assignment = mongoose.model('Assignment');
 exports.create = async (req, res) => {
     try {
         const form = new formidable.IncomingForm(), data = {};
-        formHelper.formSetup(form, data, 'subject');
+        formHelper.formSetup(form, data);
         form.on('error', function (err) {
             res.status(400).json({
                 message: err.toString()
@@ -49,7 +49,7 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
     try {
         const form = new formidable.IncomingForm(), data = {};
-        formHelper.formSetup(form, data, 'subject');
+        formHelper.formSetup(form, data);
         form.on('error', function (err) {
             res.status(400).json({
                 message: err.toString()
