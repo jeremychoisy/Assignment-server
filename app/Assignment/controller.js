@@ -12,8 +12,10 @@ const User = mongoose.model('User');
 exports.get = async (req, res) => {
     try {
         const page = req.query.page || 1;
-        const pageSize = parseInt(req.query.pagesize) || 10;
-        const filter = {$or: [{author: req.user._id}, {'subject.teacher': req.user._id}]}
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        const isDone = req.query.isDone.lowercase() === 'true';
+        const doneFilter = req.user.userLevel === 'teacher' ? {score: {$exists: true}} : {isSubmitted: true};
+        const filter = {$and: [{$or: [{author: req.user._id}, {'subject.teacher': req.user._id}]}, isDone ? doneFilter : {}]}
         const lookupSubject = {
             from: 'subjects',
             localField: 'subject',
