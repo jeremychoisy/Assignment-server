@@ -28,6 +28,7 @@ exports.create = async (req, res) => {
                 });
             } else {
                 const subject = await Subject.create({...data, teacher: req.user._id});
+                await User.updateOne({_id: req.user._id}, {$push: {subjects: subject._id}});
 
                 res.status(200).json({
                     subject
@@ -56,7 +57,6 @@ exports.update = async (req, res) => {
             });
         });
         form.on('end', async () => {
-            const subject = await Subject.findById(req.params.id);
             if (data.subjectPictureUrl) {
                 //TODO: Remove AWS S3
             }
@@ -84,33 +84,22 @@ exports.update = async (req, res) => {
 };
 
 /**
- * Returns all the subjects managed by the teacher requesting it, based on the JWT's payload.
- * Requires the user level to be 'teacher'.
- */
-exports.getByTeacher = async (req, res) => {
-    try {
-        const subjects = await Subject.find({'teacher': req.user._id})
-            .populate('teacher');
-        res.status(200).json({
-            subjects
-        });
-    } catch (err) {
-        res.status(500).json({
-            message: err.toString()
-        });
-    }
-}
-
-/**
  * Returns all the subjects.
  */
 exports.get = async (req, res) => {
     try {
-        console.log(req.user._id);
-        const subjects = await Subject.find({})
-            .populate('teacher');
+        const subjects = await Subject.find({}).lean();
+        console.log(subjects);
+        const subjectsWithTeacher = [];
+        for (const subject of subjects) {
+            const teacher = await User.findOne({$and: [{subjects: subject._id},{userLevel: 'teacher'}]});
+            subjectsWithTeacher.push({
+                ...subject,
+                teacher
+            });
+        }
         res.status(200).json({
-            subjects
+            subjects: subjectsWithTeacher
         });
     } catch (err) {
         res.status(500).json({
@@ -124,17 +113,16 @@ exports.get = async (req, res) => {
  */
 exports.getById = async (req, res) => {
     try {
-        const subject = await Subject.findOne({_id: req.params.id})
-            .populate('teacher');
-        if (subject) {
-            res.status(200).json({
-                subject
-            });
-        } else {
-            res.status(404).json({
-                message: 'Subject not found'
-            });
-        }
+        const subjectId = req.params.id;
+        const teacher = await User.findOne({$and: [{subjects: subjectId},{userLevel: 'teacher'}]});
+        const subject = await Subject.findById(subjectId).lean();
+        console.log(subject);
+        res.status(200).json({
+            subject: {
+                ...subject,
+                teacher
+            }
+        });
     } catch (err) {
         res.status(500).json({
             message: err.toString()
@@ -157,6 +145,8 @@ exports.delete = async (req, res) => {
             await Assignment.deleteMany({'subject': req.params.id});
             // Removes the subject from the users' subjects array
             await User.updateMany({subjects: req.params.id}, {$pull: {subjects: req.params.id}});
+            // Removes the subject from the users' requested subjects array
+            await User.updateMany({requestedSubjects: req.params.id}, {$pull: {requestedSubjects: req.params.id}});
             // Deletes subject
             await Subject.findByIdAndDelete(req.params.id);
             res.status(200).json({

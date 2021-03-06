@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
     email: {type: String, required: true},
     avatarUrl: {type: String},
     subjects: [{type: mongoose.Schema.Types.ObjectId, ref: 'Subject'}],
+    requestedSubjects: [{type: mongoose.Schema.Types.ObjectId, ref: 'Subject'}],
     userLevel: {type: String, enum: ['teacher', 'student'], default: 'student'}
 });
 

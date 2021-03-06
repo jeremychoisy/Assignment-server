@@ -14,8 +14,10 @@ exports.get = async (req, res) => {
         const page = req.query.page || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
         const isDone = req.query.isDone.lowercase() === 'true';
-        const doneFilter = req.user.userLevel === 'teacher' ? {score: {$exists: true}} : {isSubmitted: true};
-        const filter = {$and: [{$or: [{author: req.user._id}, {'subject.teacher': req.user._id}]}, isDone ? doneFilter : {}]}
+        const subjectId = req.query.subjectId;
+        const teacherFilter = {$and: [{$or: [{author: {$ne: req.user._id }}, {'subject._id': subjectId}]}, isDone ? {score: {$exists: true}} : {}]}
+        const studentFilter = {$and: [{author: req.user._id}, {'subject._id': subjectId}, isDone ? {isSubmitted: true} : {}]}
+        const filter = req.user.userLevel === 'teacher' ? teacherFilter : studentFilter;
         const lookupSubject = {
             from: 'subjects',
             localField: 'subject',
@@ -107,7 +109,7 @@ exports.create = async (req, res) => {
             const rootAssignment = await Assignment.create({...data, author: req.user._id});
             // Creates one assignment per student
             for (const member of subjectMembers) {
-                const assignment = await Assignment.create({...data, author: member._id, rootAssignment: rootAssignment._id});
+                await Assignment.create({...data, author: member._id, rootAssignment: rootAssignment._id});
                 nbOfAssignmentsCreated++;
             }
             res.status(200).json({
@@ -137,7 +139,7 @@ exports.update = async (req, res) => {
             });
         });
         form.on('end', async () => {
-            const assignment = await Assignment.findById(req.params.id);
+            await Assignment.findById(req.params.id);
             let nbOfUpdatedDocuments = 0;
             for (let prop in data) if (data.hasOwnProperty(prop) && prop === 'rootAssignment') delete data[prop];
             await Assignment.updateMany({rootAssignment: req.params.id}, {$set: data})

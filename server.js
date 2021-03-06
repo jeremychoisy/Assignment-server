@@ -15,14 +15,6 @@ global.S3 = new AWS.S3({
     apiVersion: '2006-03-01'
 })
 
-// Creates the public directories if needed
-const publicDirectories = ['/picture/avatar', '/picture/subject'];
-publicDirectories.forEach((dir) => {
-    if (!fs.existsSync('./public' + dir)){
-        fs.mkdirSync('./public' + dir, {recursive: true});
-    }
-});
-
 // Bootstrap models
 require('./app/Assignment/model');
 require('./app/User/model');
@@ -60,8 +52,6 @@ server.use(function (req, res, next) {
     res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH");
     next();
 });
-
-server.use('/pictures', express.static(__dirname + '/public/pictures'));
 
 mongoose.Promise = global.Promise;
 mongoose.connect(mongoDBConfig.url, {

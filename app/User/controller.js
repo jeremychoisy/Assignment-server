@@ -67,6 +67,7 @@ exports.logIn = (req, res) => {
                 const token = jwt.sign({email: user.email, admin: user.userLevel === 'teacher'}, key.secretKey);
                 const foundUser = await User.findOne({email: req.body.email})
                     .select('name lastName email avatarUrl creationDate userLevel')
+                    .populate('requestedSubjects')
                     .populate('subjects');
                 res.status(200).json({
                     user: foundUser,
@@ -96,7 +97,6 @@ exports.update = async (req, res) => {
             });
         });
         form.on('end', async () => {
-            const user = await User.findById(req.user._id);
             if (data.avatarUrl) {
                 //TODO: Remove AWS S3
             }
@@ -107,6 +107,7 @@ exports.update = async (req, res) => {
                     new: true
                 }
             )
+                .populate('requestedSubjects')
                 .populate('subjects')
                 .exec(async (err, user) => {
                     if (err) {
@@ -135,6 +136,7 @@ exports.get = async (req, res) => {
     try {
         const user = await User.findOne({_id: req.params.id})
             .select('-password')
+            .populate('requestedSubjects')
             .populate('subjects');
 
         if (user) {
@@ -154,17 +156,48 @@ exports.get = async (req, res) => {
 }
 
 /**
- * Returns the students being part of a specific subject, based on the subject id provided.
+ * Returns the students of a specific subject or the one requesting it, based on the subject id provided.
  */
 exports.getForSubject = async (req, res) => {
     try {
-        const users = await User.find({subjects: req.params.id})
+        const users = await User.find({$and: [{$or:[{subjects: req.params.id},{requestedSubjects: req.params.id}]}, {userLevel: {$ne: 'teacher'}}]})
             .select('-password')
-            .sort({lastName: 1})
-            .populate('subjects');
+            .sort({lastName: 1});
 
         res.status(200).json({
             users
+        });
+    } catch (err) {
+        res.status(500).json({
+            message: err.toString()
+        });
+    }
+}
+
+/**
+ * Approve the student, adding him to the subject, based on the user id and subject id provided, only accessible for the teachers
+ */
+exports.approveStudent = async (req, res) => {
+    try {
+        await User.findOneAndUpdate({_id: req.params.id}, {$pull: {requestedSubjects: req.body.subjectId}, $push: {subjects: req.body.subjectId}});
+        res.status(200).json({
+            message: 'Student Approved'
+        });
+    } catch (err) {
+        res.status(500).json({
+            message: err.toString()
+        });
+    }
+}
+
+/**
+ * Decline the student, not adding him to the subject, based on the user id and subject id provided, only accessible for the teachers
+ */
+exports.declineStudent = async (req, res) => {
+    try {
+        await User.findOneAndUpdate({_id: req.params.id}, {$pull: {requestedSubjects: req.body.subjectId}});
+        res.status(200).json({
+            message: 'Student Declined'
         });
     } catch (err) {
         res.status(500).json({
