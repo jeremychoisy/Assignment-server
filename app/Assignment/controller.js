@@ -216,6 +216,13 @@ exports.update = async (req, res) => {
  */
 exports.delete = async (req, res) => {
     try {
+        // Delete files on S3
+        const assignments = await Assignment.find({'rootAssignment': req.params.id}).lean();
+        for (const assignment of assignments) {
+            if (assignment.assignmentUrl) {
+                deleteFileHelper.deleteFile(assignment.assignmentUrl);
+            }
+        }
         // Deletes all assignments related to the root assignment
         await Assignment.deleteMany({'rootAssignment': req.params.id});
         // Deletes root assignment

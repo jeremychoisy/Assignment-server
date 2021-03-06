@@ -220,6 +220,16 @@ exports.delete = async (req, res) => {
         // check password
         const result = await bcrypt.compare(req.body.password, user.password);
         if (result) {
+            // Delete files on S3
+            const assignments = await Assignment.find({'author': user._id}).lean();
+            for (const assignment of assignments) {
+                if (assignment.assignmentUrl) {
+                    deleteFileHelper.deleteFile(assignment.assignmentUrl);
+                }
+            }
+            if (user.avatarUrl) {
+                deleteFileHelper.deleteFile(user.avatarUrl);
+            }
             // Delete user's assignments
             await Assignment.deleteMany({'author': user._id});
             // Delete user

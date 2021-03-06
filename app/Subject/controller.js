@@ -146,6 +146,11 @@ exports.delete = async (req, res) => {
             await User.updateMany({subjects: req.params.id}, {$pull: {subjects: req.params.id}});
             // Removes the subject from the users' requested subjects array
             await User.updateMany({requestedSubjects: req.params.id}, {$pull: {requestedSubjects: req.params.id}});
+            // Delete picture on S3
+            const subject = await Subject.findById(req.params.id);
+            if (subject.subjectPictureUrl) {
+                deleteFileHelper.deleteFile(subject.subjectPictureUrl);
+            }
             // Deletes subject
             await Subject.findByIdAndDelete(req.params.id);
             res.status(200).json({
