@@ -13,47 +13,51 @@ exports.get = async (req, res) => {
     try {
         const page = req.query.page || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
-        const isDone = req.query.isDone.lowercase() === 'true';
+        const isDone = req.query.isDone ? req.query.isDone.lowercase() === 'true' : false;
         const subjectId = req.query.subjectId;
-        const teacherFilter = {$and: [{$or: [{author: {$ne: req.user._id }}, {'subject._id': subjectId}]}, isDone ? {score: {$exists: true}} : {}]}
-        const studentFilter = {$and: [{author: req.user._id}, {'subject._id': subjectId}, isDone ? {isSubmitted: true} : {}]}
+        const teacherFilter = {$and: [{author: {$ne: req.user._id }}, {subject: subjectId}, {score: {$exists: isDone}}]}
+        const studentFilter = {$and: [{author: req.user._id}, {subject: subjectId}, {isSubmitted: isDone}]}
         const filter = req.user.userLevel === 'teacher' ? teacherFilter : studentFilter;
-        const lookupSubject = {
-            from: 'subjects',
-            localField: 'subject',
-            foreignField: '_id',
-            as: 'subject'
-        };
-        const lookupAuthor = {
-            from: 'users',
-            localField: 'author',
-            foreignField: '_id',
-            as: 'author'
-        };
-        const totalCount = await Assignment.aggregate([
-            {$lookup: lookupSubject},
-            {$match: filter},
-            {$count: 'value'}
-        ]);
-        const assignments = await Assignment.aggregate([
-            {$lookup: lookupSubject},
-            {$match: filter},
-            {$lookup: lookupAuthor},
-            {$sort: {submissionDate: -1, 'author.lastName': 1}},
-            {$skip: (page - 1) * pageSize},
-            {$limit: pageSize}
-        ]);
 
-        // Since aggregate returns an array no matter what,
-        // small work around in order to avoid dealing with unnecessary arrays
-        assignments.forEach((assignment) => {
-            assignment.subject = assignment.subject[0];
-            assignment.author = assignment.author[0];
-        })
+        const totalCount = await Assignment.count(filter);
+        const assignments = await Assignment.find(filter)
+            .populate('author')
+            .sort({submissionDate: -1, 'author.lastName': 1})
+            .skip((page - 1) * pageSize)
+            .populate('subject');
 
         res.status(200).json({
             assignments,
-            totalCount: (totalCount[0] && totalCount[0].value) || 0
+            totalCount
+        });
+    } catch (err) {
+        res.status(500).json({
+            message: err.toString()
+        });
+    }
+}
+
+/**
+ * Returns root assignments related to the teacher requesting them, based on the JWT payload.
+ */
+exports.getRoot = async (req, res) => {
+    try {
+        const page = req.query.page || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        const subjectId = req.query.subjectId;
+        const filter = {$and: [{author: req.user._id}, {subject: subjectId}]};
+
+        const totalCount = await Assignment.count(filter);
+        const assignments = await Assignment.find(filter)
+            .sort({submissionDate: -1})
+            .skip((page - 1) * pageSize)
+            .limit(pageSize)
+            .populate('author')
+            .populate('subject');
+
+        res.status(200).json({
+            assignments,
+            totalCount
         });
     } catch (err) {
         res.status(500).json({

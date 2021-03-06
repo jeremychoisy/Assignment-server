@@ -5,6 +5,7 @@ const passport = require('passport');
 
 /** GET */
 router.get('', passport.authenticate('user-rule', {session: false}), controller.get);
+router.get('/root', passport.authenticate('admin-rule', {session: false}), controller.getRoot);
 router.get('/:id', passport.authenticate('user-rule', {session: false}), controller.getById);
 
 /** POST */
