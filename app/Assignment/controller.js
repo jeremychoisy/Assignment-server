@@ -175,27 +175,18 @@ exports.update = async (req, res) => {
 
 /**
  * Deletes the assignment, based on the queried id.
- * Requires a valid password from the teacher requesting it, will delete all the created assignment(s).
+ * Will delete all the created assignment(s).
  * Requires the user level to be 'teacher'.
  */
 exports.delete = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id);
-        // Checks password
-        const result = await bcrypt.compare(req.body.password, user.password);
-        if (result) {
-            // Deletes all assignments related to the root assignment
-            await Assignment.deleteMany({'rootAssignment': req.params.id});
-            // Deletes root assignment
-            await Assignment.findByIdAndDelete(req.params.id);
-            res.status(200).json({
-                message: "Assignment deleted"
-            })
-        } else {
-            res.status(400).json({
-                message: "Incorrect password"
-            })
-        }
+        // Deletes all assignments related to the root assignment
+        await Assignment.deleteMany({'rootAssignment': req.params.id});
+        // Deletes root assignment
+        await Assignment.findByIdAndDelete(req.params.id);
+        res.status(200).json({
+            message: "Assignment deleted"
+        })
     } catch (err) {
         res.status(500).json({
             message: err.toString()

@@ -132,15 +132,11 @@ exports.getById = async (req, res) => {
 
 /**
  * Deletes the subject, based on the queried id.
- * Requires a valid password from the teacher requesting it, will delete all the related assignment(s) as well.
+ * Will delete all the related assignment(s) as well.
  * Requires the user level to be 'teacher'.
  */
 exports.delete = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id);
-        // Checks password
-        const result = await bcrypt.compare(req.body.password, user.password);
-        if (result) {
             // Deletes all assignments related to the given subject
             await Assignment.deleteMany({'subject': req.params.id});
             // Removes the subject from the users' subjects array
@@ -152,11 +148,6 @@ exports.delete = async (req, res) => {
             res.status(200).json({
                 message: "Subject deleted"
             })
-        } else {
-            res.status(400).json({
-                message: "Incorrect password"
-            })
-        }
     } catch (err) {
         res.status(500).json({
             message: err.toString()
