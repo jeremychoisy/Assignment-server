@@ -13,7 +13,7 @@ exports.get = async (req, res) => {
     try {
         const page = req.query.page || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
-        const isDone = req.query.isDone ? req.query.isDone.lowercase() === 'true' : false;
+        const isDone = req.query.isDone ? req.query.isDone.toLowerCase() === 'true' : false;
         const subjectId = req.query.subjectId;
         const teacherFilter = {$and: [{author: {$ne: req.user._id }}, {subject: subjectId}, {score: {$exists: isDone}}]}
         const studentFilter = {$and: [{author: req.user._id}, {subject: subjectId}, {isSubmitted: isDone}]}
