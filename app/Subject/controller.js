@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
 const formidable = require('formidable');
 const formHelper = require('../helpers/formSetup');
+const deleteFileHelper = require('../helpers/deleteFile');
 
 const Subject = mongoose.model('Subject');
 const User = mongoose.model('User');
@@ -58,7 +58,10 @@ exports.update = async (req, res) => {
         });
         form.on('end', async () => {
             if (data.subjectPictureUrl) {
-                //TODO: Remove AWS S3
+                const subject = await Subject.findById(req.params.id);
+                if (subject.subjectPictureUrl) {
+                    deleteFileHelper.deleteFile(subject.subjectPictureUrl);
+                }
             }
             for (let prop in data) if (data.hasOwnProperty(prop) && prop === 'teacher') delete data[prop];
             await Subject.findOneAndUpdate({_id: req.params.id}, {$set: data}, {new: true})
@@ -146,7 +149,7 @@ exports.delete = async (req, res) => {
             // Deletes subject
             await Subject.findByIdAndDelete(req.params.id);
             res.status(200).json({
-                message: "Subject deleted"
+                message: 'Subject deleted'
             })
     } catch (err) {
         res.status(500).json({

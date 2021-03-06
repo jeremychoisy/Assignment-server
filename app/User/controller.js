@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const key = require('../../config/jwtKeys');
 const formidable = require('formidable');
 const formHelper = require('../helpers/formSetup');
+const deleteFileHelper = require('../helpers/deleteFile');
 const passport = require('passport');
 
 const User = mongoose.model('User');
@@ -98,7 +99,10 @@ exports.update = async (req, res) => {
         });
         form.on('end', async () => {
             if (data.avatarUrl) {
-                //TODO: Remove AWS S3
+                const user = await User.findById(req.user._id);
+                if (user.avatarUrl) {
+                    deleteFileHelper.deleteFile(user.avatarUrl);
+                }
             }
             for (let prop in data) if (data.hasOwnProperty(prop) && !allowedUpdates.includes(prop)) delete data[prop];
             await User.findOneAndUpdate({_id: req.user._id}, {$set: data},
@@ -221,11 +225,11 @@ exports.delete = async (req, res) => {
             // Delete user
             await User.findByIdAndDelete(user._id);
             res.status(200).json({
-                message: "User deleted"
+                message: 'User deleted'
             })
         } else {
             res.status(400).json({
-                message: "Incorrect password"
+                message: 'Incorrect password'
             })
         }
     } catch (err) {

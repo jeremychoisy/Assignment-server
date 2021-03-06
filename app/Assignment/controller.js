@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const formidable = require('formidable');
 const formHelper = require('../helpers/formSetup');
-const bcrypt = require('bcrypt');
+const deleteFileHelper = require('../helpers/deleteFile');
 
 const Assignment = mongoose.model('Assignment');
 const User = mongoose.model('User');
@@ -81,7 +81,7 @@ exports.getById = async (req, res) => {
             });
         } else {
             res.status(404).json({
-                message: "Assignment not found"
+                message: 'Assignment not found'
             });
         }
     } catch (err) {
@@ -120,6 +120,42 @@ exports.create = async (req, res) => {
                 rootAssignment,
                 nbOfAssignmentsCreated
             });
+        });
+        form.parse(req);
+    } catch (err) {
+        res.status(500).json({
+            message: err.toString()
+        });
+    }
+};
+
+/**
+ * Updates the assignment with the provided url pointing to the actual assignment file, based on the given id.
+ */
+exports.uploadAssignment = async (req, res) => {
+    try {
+        const form = new formidable.IncomingForm(), data = {};
+        formHelper.formSetup(form, data);
+        form.on('error', function (err) {
+            res.status(400).json({
+                message: err.toString()
+            });
+        });
+        form.on('end', async () => {
+            if (data.assignmentUrl) {
+                const assignment = await Assignment.findById(req.params.id);
+                if (assignment.assignmentUrl) {
+                    deleteFileHelper.deleteFile(assignment.assignmentUrl);
+                }
+                await Assignment.updateOne({_id: req.params.id}, {$set: {assignmentUrl: data.assignmentUrl}});
+                res.status(200).json({
+                    message: 'Assignment updated with the new file url.'
+                });
+            } else {
+                res.status(400).json({
+                    message: 'Bad request'
+                });
+            }
         });
         form.parse(req);
     } catch (err) {
@@ -185,7 +221,7 @@ exports.delete = async (req, res) => {
         // Deletes root assignment
         await Assignment.findByIdAndDelete(req.params.id);
         res.status(200).json({
-            message: "Assignment deleted"
+            message: 'Assignment deleted'
         })
     } catch (err) {
         res.status(500).json({

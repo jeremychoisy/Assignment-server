@@ -10,6 +10,7 @@ const assignmentSchema = new mongoose.Schema({
     isSubmitted: {type: Boolean, default: false},
     score: {type: Number},
     rootAssignment: {type: mongoose.Schema.Types.ObjectId, ref: 'Assignment'},
+    assignmentUrl: {type: String}
 });
 
 module.exports = mongoose.model('Assignment', assignmentSchema);
