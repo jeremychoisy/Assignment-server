@@ -4,7 +4,7 @@ const passport = require('passport');
 const router = express.Router();
 
 /** GET */
-router.get('/subject/:id', passport.authenticate('admin-rule', {session: false}), controller.getForSubject);
+router.get('/subject/:id', passport.authenticate('user-rule', {session: false}), controller.getForSubject);
 router.get('/:id', passport.authenticate('user-rule', {session: false}), controller.get);
 
 /** POST */
