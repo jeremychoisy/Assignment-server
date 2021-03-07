@@ -143,10 +143,10 @@ exports.update = async (req, res) => {
             });
         });
         form.on('end', async () => {
-            if (data.assignmentUrl || data.isSubmitted) {
+            const assignment = await Assignment.findById(req.params.id);
+            if ((data.assignmentUrl || data.isSubmitted) && (req.user._id === assignment.author)) {
                 for (let prop in data) if (data.hasOwnProperty(prop) && (prop !== 'assignmentUrl' && prop !== 'isSubmitted')) delete data[prop];
                 if (data.assignmentUrl) {
-                    const assignment = await Assignment.findById(req.params.id);
                     if (assignment.assignmentUrl) {
                         deleteFileHelper.deleteFile(assignment.assignmentUrl);
                     }
