@@ -183,7 +183,8 @@ exports.updateScore = async (req, res) => {
         });
         form.on('end', async () => {
             const assignment = await Assignment.findById(req.params.id).populate('subject');
-            if (data.score && req.user._id === assignment.subject.teacher) {
+            const teacher = await User.findOne({$and: [{subjects: assignment.subject._id},{userLevel: 'teacher'}]});
+            if (data.score && (req.user._id.toString() === teacher._id.toString())) {
                 for (let prop in data) if (data.hasOwnProperty(prop) && prop !== 'score') delete data[prop];
                 await Assignment.updateOne({_id: req.params.id}, {$set: data});
                 res.status(200).json({
