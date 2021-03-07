@@ -166,14 +166,17 @@ exports.getForSubject = async (req, res) => {
     try {
         const page = req.query.page || 1;
         const pageSize = parseInt(req.query.pageSize) || 20;
-        const users = await User.find({$and: [{$or:[{subjects: req.params.id},{requestedSubjects: req.params.id}]}, {userLevel: {$ne: 'teacher'}}]})
+        const filter = {$and: [{$or:[{subjects: req.params.id},{requestedSubjects: req.params.id}]}, {userLevel: {$ne: 'teacher'}}]};
+        const totalCount = await User.count(filter);
+        const users = await User.find(filter)
             .select('-password')
             .skip((page - 1) * pageSize)
             .limit(pageSize)
             .sort({lastName: 1});
 
         res.status(200).json({
-            users
+            users,
+            totalCount
         });
     } catch (err) {
         res.status(500).json({

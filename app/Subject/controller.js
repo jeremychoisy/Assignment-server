@@ -92,7 +92,6 @@ exports.update = async (req, res) => {
 exports.get = async (req, res) => {
     try {
         const subjects = await Subject.find({}).lean();
-        console.log(subjects);
         const subjectsWithTeacher = [];
         for (const subject of subjects) {
             const teacher = await User.findOne({$and: [{subjects: subject._id},{userLevel: 'teacher'}]});
