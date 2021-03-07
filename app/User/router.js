@@ -13,6 +13,7 @@ router.post('/log-in', controller.logIn);
 
 /** PATCH */
 router.patch('', passport.authenticate('user-rule', {session: false}), controller.update);
+router.patch('/apply', passport.authenticate('user-rule', {session: false}), controller.applyStudent);
 router.patch('/approve/:id', passport.authenticate('admin-rule', {session: false}), controller.approveStudent);
 router.patch('/decline/:id', passport.authenticate('admin-rule', {session: false}), controller.declineStudent);
 

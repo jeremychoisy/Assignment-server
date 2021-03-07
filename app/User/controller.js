@@ -220,6 +220,23 @@ exports.declineStudent = async (req, res) => {
 }
 
 /**
+ * Create an application for a student to a subject, based on the user id and subject id provided
+ */
+exports.applyStudent = async (req, res) => {
+    try {
+        await User.findOneAndUpdate({_id: req.user.id}, {$push: {requestedSubjects: req.body.subjectId}});
+        res.status(200).json({
+            message: 'Application Created'
+        });
+    } catch (err) {
+        res.status(500).json({
+            message: err.toString()
+        });
+    }
+}
+
+
+/**
  * Deletes the user requesting it, based on the JWT's payload.
  * Requires a valid password, will delete the user's assignment(s) as well.
  */
