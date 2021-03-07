@@ -130,9 +130,9 @@ exports.create = async (req, res) => {
 };
 
 /**
- * Updates the assignment with the provided url pointing to the actual assignment file, based on the given id.
+ * Updates the assignment with the provided url pointing to the actual assignment file or the isSubmitted flag, based on the given id.
  */
-exports.uploadAssignment = async (req, res) => {
+exports.update = async (req, res) => {
     try {
         const form = new formidable.IncomingForm(), data = {};
         formHelper.formSetup(form, data);
@@ -142,14 +142,17 @@ exports.uploadAssignment = async (req, res) => {
             });
         });
         form.on('end', async () => {
-            if (data.assignmentUrl) {
-                const assignment = await Assignment.findById(req.params.id);
-                if (assignment.assignmentUrl) {
-                    deleteFileHelper.deleteFile(assignment.assignmentUrl);
+            if (data.assignmentUrl || data.isSubmitted) {
+                for (let prop in data) if (data.hasOwnProperty(prop) && (prop !== 'assignmentUrl' && prop !== 'isSubmitted')) delete data[prop];
+                if (data.assignmentUrl) {
+                    const assignment = await Assignment.findById(req.params.id);
+                    if (assignment.assignmentUrl) {
+                        deleteFileHelper.deleteFile(assignment.assignmentUrl);
+                    }
                 }
-                await Assignment.updateOne({_id: req.params.id}, {$set: {assignmentUrl: data.assignmentUrl}});
+                await Assignment.updateOne({_id: req.params.id}, {$set: data});
                 res.status(200).json({
-                    message: 'Assignment updated with the new file url.'
+                    message: 'Assignment updated'
                 });
             } else {
                 res.status(400).json({
@@ -169,7 +172,7 @@ exports.uploadAssignment = async (req, res) => {
  * Updates the assignment, based on the given id.
  * Requires the user level to be 'teacher'.
  */
-exports.update = async (req, res) => {
+exports.updateRoot = async (req, res) => {
     try {
         const form = new formidable.IncomingForm(), data = {};
         formHelper.formSetup(form, data);

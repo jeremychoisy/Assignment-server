@@ -12,8 +12,8 @@ router.get('/:id', passport.authenticate('user-rule', {session: false}), control
 router.post('', passport.authenticate('admin-rule', {session: false}), controller.create);
 
 /** PATCH */
-router.patch('/root/:id', passport.authenticate('admin-rule', {session: false}), controller.update);
-router.patch('/:id', passport.authenticate('user-rule', {session: false}), controller.uploadAssignment)
+router.patch('/root/:id', passport.authenticate('admin-rule', {session: false}), controller.updateRoot);
+router.patch('/:id', passport.authenticate('user-rule', {session: false}), controller.update)
 
 /** DELETE */
 router.delete('/:id', passport.authenticate('admin-rule', {session: false}), controller.delete);
