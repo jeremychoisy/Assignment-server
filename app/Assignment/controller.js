@@ -144,7 +144,7 @@ exports.update = async (req, res) => {
         });
         form.on('end', async () => {
             const assignment = await Assignment.findById(req.params.id);
-            if ((data.assignmentUrl || data.isSubmitted) && (req.user._id === assignment.author)) {
+            if ((data.assignmentUrl || data.isSubmitted) && (req.user._id.toString() === assignment.author.toString())) {
                 for (let prop in data) if (data.hasOwnProperty(prop) && (prop !== 'assignmentUrl' && prop !== 'isSubmitted')) delete data[prop];
                 if (data.assignmentUrl) {
                     if (assignment.assignmentUrl) {
