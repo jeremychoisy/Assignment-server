@@ -12,7 +12,7 @@ const User = mongoose.model('User');
 exports.get = async (req, res) => {
     try {
         const page = req.query.page || 1;
-        const pageSize = parseInt(req.query.pageSize) || 10;
+        const pageSize = parseInt(req.query.pageSize) || 20;
         const isDone = req.query.isDone ? req.query.isDone.toLowerCase() === 'true' : false;
         const subjectId = req.query.subjectId;
         const teacherFilter = {$and: [{author: {$ne: req.user._id }}, {subject: subjectId}, {score: {$exists: isDone}}]}
@@ -21,10 +21,11 @@ exports.get = async (req, res) => {
 
         const totalCount = await Assignment.count(filter);
         const assignments = await Assignment.find(filter)
-            .populate('author')
-            .sort({submissionDate: -1, 'author.lastName': 1})
             .skip((page - 1) * pageSize)
-            .populate('subject');
+            .limit(pageSize)
+            .sort({submissionDate: -1, 'author.lastName': 1})
+            .populate('subject')
+            .populate('author');
 
         res.status(200).json({
             assignments,
@@ -43,7 +44,7 @@ exports.get = async (req, res) => {
 exports.getRoot = async (req, res) => {
     try {
         const page = req.query.page || 1;
-        const pageSize = parseInt(req.query.pageSize) || 10;
+        const pageSize = parseInt(req.query.pageSize) || 20;
         const subjectId = req.query.subjectId;
         const filter = {$and: [{author: req.user._id}, {subject: subjectId}]};
 

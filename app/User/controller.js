@@ -164,8 +164,12 @@ exports.get = async (req, res) => {
  */
 exports.getForSubject = async (req, res) => {
     try {
+        const page = req.query.page || 1;
+        const pageSize = parseInt(req.query.pageSize) || 20;
         const users = await User.find({$and: [{$or:[{subjects: req.params.id},{requestedSubjects: req.params.id}]}, {userLevel: {$ne: 'teacher'}}]})
             .select('-password')
+            .skip((page - 1) * pageSize)
+            .limit(pageSize)
             .sort({lastName: 1});
 
         res.status(200).json({
