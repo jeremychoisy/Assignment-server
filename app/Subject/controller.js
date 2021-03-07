@@ -91,13 +91,7 @@ exports.update = async (req, res) => {
  */
 exports.get = async (req, res) => {
     try {
-        const page = req.query.page || 1;
-        const pageSize = parseInt(req.query.pageSize) || 20;
-        const subjects = await Subject.find({})
-            .sort({name: 1})
-            .skip((page - 1) * pageSize)
-            .limit(pageSize)
-            .lean();
+        const subjects = await Subject.find({}).lean();
 
         const subjectsWithTeacher = [];
         for (const subject of subjects) {
