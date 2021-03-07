@@ -170,6 +170,40 @@ exports.update = async (req, res) => {
 };
 
 /**
+ * Updates the assignment's score, based on the given id.
+ */
+exports.updateScore = async (req, res) => {
+    try {
+        const form = new formidable.IncomingForm(), data = {};
+        formHelper.formSetup(form, data);
+        form.on('error', function (err) {
+            res.status(400).json({
+                message: err.toString()
+            });
+        });
+        form.on('end', async () => {
+            const assignment = await Assignment.findById(req.params.id).populate('subject');
+            if (data.score && req.user._id === assignment.subject.teacher) {
+                for (let prop in data) if (data.hasOwnProperty(prop) && prop !== 'score') delete data[prop];
+                await Assignment.updateOne({_id: req.params.id}, {$set: data});
+                res.status(200).json({
+                    message: 'Score updated'
+                });
+            } else {
+                res.status(400).json({
+                    message: 'Bad request'
+                });
+            }
+        });
+        form.parse(req);
+    } catch (err) {
+        res.status(500).json({
+            message: err.toString()
+        });
+    }
+};
+
+/**
  * Updates the assignment, based on the given id.
  * Requires the user level to be 'teacher'.
  */
