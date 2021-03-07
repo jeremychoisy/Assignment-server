@@ -172,7 +172,9 @@ exports.getForSubject = async (req, res) => {
             .select('-password')
             .skip((page - 1) * pageSize)
             .limit(pageSize)
-            .sort({lastName: 1});
+            .sort({lastName: 1})
+            .populate('requestedSubjects')
+            .populate('subjects');
 
         res.status(200).json({
             users,

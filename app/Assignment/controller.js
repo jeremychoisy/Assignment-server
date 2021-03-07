@@ -50,7 +50,7 @@ exports.getRoot = async (req, res) => {
 
         const totalCount = await Assignment.count(filter);
         const assignments = await Assignment.find(filter)
-            .sort({submissionDate: -1})
+            .sort({submissionDate: 1})
             .skip((page - 1) * pageSize)
             .limit(pageSize)
             .populate('author')
