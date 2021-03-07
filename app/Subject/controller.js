@@ -91,7 +91,14 @@ exports.update = async (req, res) => {
  */
 exports.get = async (req, res) => {
     try {
-        const subjects = await Subject.find({}).lean();
+        const page = req.query.page || 1;
+        const pageSize = parseInt(req.query.pageSize) || 20;
+        const subjects = await Subject.find({})
+            .sort({name: 1})
+            .skip((page - 1) * pageSize)
+            .limit(pageSize)
+            .lean();
+
         const subjectsWithTeacher = [];
         for (const subject of subjects) {
             const teacher = await User.findOne({$and: [{subjects: subject._id},{userLevel: 'teacher'}]});
